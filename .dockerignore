@@ -1,0 +1,10 @@
+.git
+.gitignore
+target/
+*.md
+.env*
+application-local.*
+docker-compose*
+storage/
+.idea
+.vscode
