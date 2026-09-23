@@ -1,22 +1,22 @@
 # Example local development configuration template
 # Copy to application-local.properties (which is gitignored) and customize as needed.
 
-# Local PostgreSQL container settings
-DATABASE_URL=jdbc:postgresql://localhost:5432/justdoit
-DATABASE_USERNAME=postgres
-DATABASE_PASSWORD=postgres
+spring.datasource.url=jdbc:postgresql://localhost:5432/justdoit
+spring.datasource.username=postgres
+spring.datasource.password=postgres
 
 # Local storage
-STORAGE_PROVIDER=local
-LOCAL_STORAGE_DIR=./storage
+storage.provider=local
+storage.local.base-dir=./storage
+
+# Dev console SQL logging
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
 
 # AI Provider API Keys (optional for offline testing)
-GEMINI_API_KEY=your_gemini_api_key_here
-GROQ_API_KEY=your_groq_api_key_here
+ai.gemini.api-key=your_gemini_api_key_here
+ai.groq.api-key=your_groq_api_key_here
 
 # Email service
-MAIL_PROVIDER=console
-EMAIL_API_KEY=your_email_service_api_key_here
-
-# Show SQL queries in dev console
-SHOW_SQL=true
+mail.provider=console
+mail.api-key=your_email_service_api_key_here
