@@ -2,6 +2,9 @@ package com.justdoit.backend.dto;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 import com.justdoit.backend.entity.Category;
 import com.justdoit.backend.entity.Priority;
@@ -24,13 +27,19 @@ public record TaskResponse(
 		boolean dueSoon,
 		int version,
 		Instant createdAt,
-		Instant updatedAt) {
+		Instant updatedAt,
+		// Only on GET /tasks/{id} (Route plan 3.5); left out of lists
+		@JsonInclude(JsonInclude.Include.NON_NULL) List<AttachmentResponse> attachments) {
 
 	public static TaskResponse from(Task task, Instant now) {
+		return withAttachments(task, now, null);
+	}
+
+	public static TaskResponse withAttachments(Task task, Instant now, List<AttachmentResponse> attachments) {
 		return new TaskResponse(task.getId(), task.getTitle(), task.getDescription(), task.getCategory(),
 				task.getDeadline(), task.getEstimatedHours(), task.getInitialPriority(), task.getCurrentPriority(),
 				task.getStatus(), PriorityEngine.isOverdue(task, now), PriorityEngine.isDueSoon(task, now),
-				task.getVersion(), task.getCreatedAt(), task.getUpdatedAt());
+				task.getVersion(), task.getCreatedAt(), task.getUpdatedAt(), attachments);
 	}
 
 }

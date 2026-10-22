@@ -49,6 +49,10 @@ public class ApiException extends RuntimeException {
 		return new ApiException(HttpStatus.CONFLICT, "CONFLICT", "This task changed on another device. Reload to see the latest version.", null);
 	}
 
+	public static ApiException fileConflict() {
+		return new ApiException(HttpStatus.CONFLICT, "CONFLICT", "This file changed on another device.", null);
+	}
+
 	public static ApiException taskCompleted() {
 		return new ApiException(HttpStatus.BAD_REQUEST, "TASK_COMPLETED", "Completed tasks can't be edited. Mark it as pending first.", null);
 	}

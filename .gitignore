@@ -44,3 +44,6 @@ docker-compose.override.yml
 
 credentials.txt
 study_material/
+
+### Local file storage (dev uploads) ###
+storage/

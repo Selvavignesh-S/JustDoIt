@@ -15,6 +15,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
+
+import com.justdoit.backend.storage.FileTypes;
+import com.justdoit.backend.storage.StorageException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -44,6 +49,25 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
 	ResponseEntity<ApiError> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
 		return handleApi(ApiException.conflict());
+	}
+
+	// Over spring.servlet.multipart.max-file-size (50 MB)
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
+	ResponseEntity<ApiError> handleTooLarge(MaxUploadSizeExceededException ex) {
+		return handleApi(FileTypes.tooLarge());
+	}
+
+	@ExceptionHandler(MissingServletRequestPartException.class)
+	ResponseEntity<ApiError> handleMissingFile(MissingServletRequestPartException ex) {
+		return handleApi(ApiException.validation(ex.getRequestPartName(), "Choose a file."));
+	}
+
+	// File storage unreachable. Uploads are cleaned up, so nothing was changed.
+	@ExceptionHandler(StorageException.class)
+	ResponseEntity<ApiError> handleStorage(StorageException ex) {
+		log.error("Storage failure", ex);
+		return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+				.body(new ApiError("STORAGE_UNAVAILABLE", "Couldn't reach file storage. Nothing was changed. Try again."));
 	}
 
 	@ExceptionHandler(HttpMessageNotReadableException.class)

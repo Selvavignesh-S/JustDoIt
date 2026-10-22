@@ -16,7 +16,20 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<aws-sdk.version>2.46.7</aws-sdk.version>
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>bom</artifactId>
+				<version>${aws-sdk.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 		<dependency>
@@ -42,6 +55,17 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<!-- S3-compatible client for Backblaze B2 (SRS 16). Async/Netty client excluded: only the sync client is used. -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>software.amazon.awssdk</groupId>
+					<artifactId>netty-nio-client</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>

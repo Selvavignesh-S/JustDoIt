@@ -30,8 +30,10 @@ import com.justdoit.backend.entity.TaskScope;
 import com.justdoit.backend.entity.TaskSort;
 import com.justdoit.backend.entity.TaskStatus;
 import com.justdoit.backend.exception.ApiException;
+import com.justdoit.backend.repository.AttachmentVersionRepository;
 import com.justdoit.backend.repository.TaskRepository;
 import com.justdoit.backend.repository.UserRepository;
+import com.justdoit.backend.storage.StorageCleanup;
 import com.justdoit.backend.util.RateLimiter;
 
 import jakarta.persistence.criteria.Predicate;
@@ -53,12 +55,17 @@ public class TaskService {
 	private final UserRepository users;
 	private final AiService ai;
 	private final RateLimiter rateLimiter;
+	private final AttachmentVersionRepository versions;
+	private final StorageCleanup storageCleanup;
 
-	public TaskService(TaskRepository tasks, UserRepository users, AiService ai, RateLimiter rateLimiter) {
+	public TaskService(TaskRepository tasks, UserRepository users, AiService ai, RateLimiter rateLimiter,
+			AttachmentVersionRepository versions, StorageCleanup storageCleanup) {
 		this.tasks = tasks;
 		this.users = users;
 		this.ai = ai;
 		this.rateLimiter = rateLimiter;
+		this.versions = versions;
+		this.storageCleanup = storageCleanup;
 	}
 
 	// Route plan 3.1: suggest title, category and hours from the description. Nothing is saved.
@@ -172,14 +179,16 @@ public class TaskService {
 		return tasks.saveAndFlush(task);
 	}
 
-	// Allowed in either status (SRS 9.5). The DB cascade removes attachments and versions.
-	// The attachments step must also delete their stored files here.
+	// Allowed in either status (SRS 9.5). The DB cascade removes attachments and versions; their stored
+	// files are deleted once the delete has committed, so nothing is left orphaned in storage.
 	@Transactional
 	public void delete(long userId, long taskId, int version) {
 		Task task = owned(userId, taskId);
 		checkVersion(task, version);
+		List<String> storedFiles = versions.storedFileNamesForTask(taskId);
 		tasks.delete(task);
 		tasks.flush();
+		storageCleanup.deleteAfterCommit(storedFiles);
 	}
 
 	// The scheduler's job (SRS 12): re-run the rule on every pending task and store only what changed.

@@ -31,6 +31,7 @@ import com.justdoit.backend.entity.Task;
 import com.justdoit.backend.entity.TaskScope;
 import com.justdoit.backend.entity.TaskSort;
 import com.justdoit.backend.entity.TaskStatus;
+import com.justdoit.backend.service.AttachmentService;
 import com.justdoit.backend.service.JwtService;
 import com.justdoit.backend.service.TaskService;
 
@@ -42,9 +43,11 @@ import jakarta.validation.Valid;
 public class TaskController {
 
 	private final TaskService tasks;
+	private final AttachmentService attachments;
 
-	public TaskController(TaskService tasks) {
+	public TaskController(TaskService tasks, AttachmentService attachments) {
 		this.tasks = tasks;
+		this.attachments = attachments;
 	}
 
 	@PostMapping
@@ -80,7 +83,8 @@ public class TaskController {
 
 	@GetMapping("/{id}")
 	TaskResponse get(@AuthenticationPrincipal Jwt jwt, @PathVariable long id) {
-		return TaskResponse.from(tasks.get(JwtService.userId(jwt), id), Instant.now());
+		long userId = JwtService.userId(jwt);
+		return TaskResponse.withAttachments(tasks.get(userId, id), Instant.now(), attachments.list(userId, id));
 	}
 
 	@PatchMapping("/{id}")
