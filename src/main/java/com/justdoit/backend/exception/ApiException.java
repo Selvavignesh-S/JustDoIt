@@ -39,6 +39,20 @@ public class ApiException extends RuntimeException {
 		return new ApiException(HttpStatus.BAD_REQUEST, "INVALID_TOKEN", "This link has expired or was already used.", null);
 	}
 
+	// Same answer for "doesn't exist" and "belongs to someone else", so ids can't be probed (SRS 7.4)
+	public static ApiException notAvailable() {
+		return new ApiException(HttpStatus.NOT_FOUND, "NOT_AVAILABLE", "This task isn't available.", null);
+	}
+
+	// The client's row version is stale: someone (usually the same user on another device) changed it first (SRS 19)
+	public static ApiException conflict() {
+		return new ApiException(HttpStatus.CONFLICT, "CONFLICT", "This task changed on another device. Reload to see the latest version.", null);
+	}
+
+	public static ApiException taskCompleted() {
+		return new ApiException(HttpStatus.BAD_REQUEST, "TASK_COMPLETED", "Completed tasks can't be edited. Mark it as pending first.", null);
+	}
+
 	public static ApiException rateLimited() {
 		return new ApiException(HttpStatus.TOO_MANY_REQUESTS, "RATE_LIMITED", "Too many requests. Try again in a few minutes.", null);
 	}

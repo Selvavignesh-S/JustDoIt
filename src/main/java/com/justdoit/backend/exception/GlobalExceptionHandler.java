@@ -9,10 +9,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -30,6 +32,18 @@ public class GlobalExceptionHandler {
 		Map<String, String> fields = new LinkedHashMap<>();
 		ex.getBindingResult().getFieldErrors().forEach(e -> fields.putIfAbsent(e.getField(), e.getDefaultMessage()));
 		return handleApi(ApiException.validation(fields));
+	}
+
+	// A bad query parameter, e.g. ?priority=URGENT
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+		return handleApi(ApiException.validation(ex.getName(), "This value isn't allowed."));
+	}
+
+	// Two saves raced past the version check; @Version made the second one fail
+	@ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+	ResponseEntity<ApiError> handleOptimisticLock(ObjectOptimisticLockingFailureException ex) {
+		return handleApi(ApiException.conflict());
 	}
 
 	@ExceptionHandler(HttpMessageNotReadableException.class)
