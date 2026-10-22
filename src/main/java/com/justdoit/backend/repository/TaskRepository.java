@@ -1,6 +1,7 @@
 package com.justdoit.backend.repository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,8 @@ public interface TaskRepository extends JpaRepository<Task, Long>, JpaSpecificat
 
 	// Ownership is part of the lookup: another user's task is simply "not found" (SRS 7.4)
 	Optional<Task> findByIdAndUserId(Long id, Long userId);
+
+	List<Task> findByUserIdAndStatus(Long userId, TaskStatus status);
 
 	// Scheduler: walks every pending task in id order, one chunk at a time
 	Slice<Task> findByStatus(TaskStatus status, Pageable pageable);
