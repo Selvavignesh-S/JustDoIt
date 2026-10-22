@@ -42,3 +42,5 @@ application-local.yml
 application-local.yaml
 docker-compose.override.yml
 
+credentials.txt
+study_material/

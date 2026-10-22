@@ -20,3 +20,6 @@ ai.groq.api-key=your_groq_api_key_here
 # Email service
 mail.provider=console
 mail.api-key=your_email_service_api_key_here
+
+# JWT signing secret (required once auth is built). Generate one with: openssl rand -hex 32
+security.jwt.secret=replace_with_long_random_hex
