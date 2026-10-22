@@ -1,6 +1,9 @@
 package com.justdoit.backend.service;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -15,7 +18,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.justdoit.backend.ai.AiService;
 import com.justdoit.backend.dto.TaskCreateRequest;
+import com.justdoit.backend.dto.TaskSuggestion;
 import com.justdoit.backend.dto.TaskSummaryResponse;
 import com.justdoit.backend.dto.TaskUpdateRequest;
 import com.justdoit.backend.entity.Category;
@@ -27,6 +32,7 @@ import com.justdoit.backend.entity.TaskStatus;
 import com.justdoit.backend.exception.ApiException;
 import com.justdoit.backend.repository.TaskRepository;
 import com.justdoit.backend.repository.UserRepository;
+import com.justdoit.backend.util.RateLimiter;
 
 import jakarta.persistence.criteria.Predicate;
 
@@ -37,12 +43,40 @@ public class TaskService {
 	private static final int PAGE_SIZE = 20;
 	private static final int RECALC_CHUNK = 500;
 
+	// SRS 21.2 and 8.6: suggested 5/min and 30/day per user, plus a global daily ceiling under the free quotas
+	private static final int AI_PER_USER_PER_MINUTE = 5;
+	private static final int AI_PER_USER_PER_DAY = 30;
+	private static final int AI_GLOBAL_PER_DAY = 500;
+	private static final int MAX_DESCRIPTION = 500;
+
 	private final TaskRepository tasks;
 	private final UserRepository users;
+	private final AiService ai;
+	private final RateLimiter rateLimiter;
 
-	public TaskService(TaskRepository tasks, UserRepository users) {
+	public TaskService(TaskRepository tasks, UserRepository users, AiService ai, RateLimiter rateLimiter) {
 		this.tasks = tasks;
 		this.users = users;
+		this.ai = ai;
+		this.rateLimiter = rateLimiter;
+	}
+
+	// Route plan 3.1: suggest title, category and hours from the description. Nothing is saved.
+	public TaskSuggestion analyze(long userId, String rawDescription) {
+		// SRS 8.6 rules 1-2: trimmed, whitespace collapsed, then rejected (never truncated) if too long
+		String description = rawDescription.strip().replaceAll("\\s+", " ");
+		if (description.length() > MAX_DESCRIPTION) {
+			throw ApiException.validation("description", "Keep the description under 500 characters.");
+		}
+		// A limited request makes no provider call at all
+		boolean allowed = rateLimiter.tryAcquire("ai:user-minute:" + userId, AI_PER_USER_PER_MINUTE, Duration.ofMinutes(1))
+				&& rateLimiter.tryAcquire("ai:user-day:" + userId, AI_PER_USER_PER_DAY, Duration.ofDays(1))
+				// Keyed by UTC date, so the global ceiling resets at midnight UTC
+				&& rateLimiter.tryAcquire("ai:global:" + LocalDate.now(ZoneOffset.UTC), AI_GLOBAL_PER_DAY, Duration.ofDays(1));
+		if (!allowed) {
+			throw ApiException.rateLimited();
+		}
+		return ai.suggest(description);
 	}
 
 	@Transactional

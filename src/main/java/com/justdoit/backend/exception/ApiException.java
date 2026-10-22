@@ -53,6 +53,11 @@ public class ApiException extends RuntimeException {
 		return new ApiException(HttpStatus.BAD_REQUEST, "TASK_COMPLETED", "Completed tasks can't be edited. Mark it as pending first.", null);
 	}
 
+	// Every AI provider failed: the app must open the manual form. Identified by code, since a sleeping host also gives 5xx.
+	public static ApiException aiUnavailable() {
+		return new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "AI_UNAVAILABLE", "The assistant isn't available right now. Fill in the details to create your task.", null);
+	}
+
 	public static ApiException rateLimited() {
 		return new ApiException(HttpStatus.TOO_MANY_REQUESTS, "RATE_LIMITED", "Too many requests. Try again in a few minutes.", null);
 	}

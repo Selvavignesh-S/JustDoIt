@@ -17,9 +17,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.justdoit.backend.dto.AnalyzeRequest;
 import com.justdoit.backend.dto.PageResponse;
 import com.justdoit.backend.dto.TaskCreateRequest;
 import com.justdoit.backend.dto.TaskResponse;
+import com.justdoit.backend.dto.TaskSuggestion;
 import com.justdoit.backend.dto.TaskSummaryResponse;
 import com.justdoit.backend.dto.TaskUpdateRequest;
 import com.justdoit.backend.dto.VersionRequest;
@@ -34,7 +36,7 @@ import com.justdoit.backend.service.TaskService;
 
 import jakarta.validation.Valid;
 
-// Route plan 3.2-3.9 (3.1, the AI analyze step, comes later)
+// Route plan 3.1-3.9
 @RestController
 @RequestMapping("/tasks")
 public class TaskController {
@@ -50,6 +52,12 @@ public class TaskController {
 	TaskResponse create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody TaskCreateRequest req) {
 		Instant now = Instant.now();
 		return TaskResponse.from(tasks.create(JwtService.userId(jwt), req, now), now);
+	}
+
+	// Route plan 3.1: AI suggestion only, nothing saved. Rate limited; 503 AI_UNAVAILABLE means "use the manual form".
+	@PostMapping("/analyze")
+	TaskSuggestion analyze(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody AnalyzeRequest req) {
+		return tasks.analyze(JwtService.userId(jwt), req.description());
 	}
 
 	@GetMapping
