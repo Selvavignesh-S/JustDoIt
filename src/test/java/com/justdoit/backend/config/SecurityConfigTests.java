@@ -1,15 +1,18 @@
 package com.justdoit.backend.config;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 class SecurityConfigTests {
 
@@ -24,7 +27,18 @@ class SecurityConfigTests {
 
 	@Test
 	void everythingElseRequiresAuth() throws Exception {
-		mockMvc.perform(get("/tasks")).andExpect(status().isForbidden());
+		mockMvc.perform(get("/users/me"))
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
+	}
+
+	@Test
+	void forgedTokenIsRejected() throws Exception {
+		// Signed with a different key, so the signature check must fail
+		String forged = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiZXhwIjo0MTAyNDQ0ODAwfQ.c2lnbmF0dXJlLXdpdGgtdGhlLXdyb25nLWtleQ";
+		mockMvc.perform(get("/users/me").header("Authorization", "Bearer " + forged))
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
 	}
 
 }
