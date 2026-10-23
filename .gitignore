@@ -46,4 +46,5 @@ credentials.txt
 study_material/
 
 ### Local file storage (dev uploads) ###
-storage/
+# Leading slash: only the folder at the repo root, NOT the Java package .../backend/storage/
+/storage/
