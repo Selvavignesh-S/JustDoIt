@@ -62,6 +62,12 @@ public class ApiException extends RuntimeException {
 		return new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "AI_UNAVAILABLE", "The assistant isn't available right now. Fill in the details to create your task.", null);
 	}
 
+	// MAIL_PROVIDER=none: same answer for every email address, so it reveals nothing about accounts
+	public static ApiException emailDisabled() {
+		return new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "EMAIL_DISABLED",
+				"Emails can't be sent yet. Your email is saved and will be used for password reset once email is turned on.", null);
+	}
+
 	public static ApiException rateLimited() {
 		return new ApiException(HttpStatus.TOO_MANY_REQUESTS, "RATE_LIMITED", "Too many requests. Try again in a few minutes.", null);
 	}

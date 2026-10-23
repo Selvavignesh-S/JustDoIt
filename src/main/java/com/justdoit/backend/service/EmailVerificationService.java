@@ -27,9 +27,17 @@ public class EmailVerificationService {
 		this.email = email;
 	}
 
-	// Sends a fresh code to user.getEmail(); any earlier unused code stops working
+	public boolean emailEnabled() {
+		return !email.isDisabled();
+	}
+
+	// Sends a fresh code to user.getEmail(); any earlier unused code stops working.
+	// With email off the address just stays saved, unconfirmed, until email is turned on.
 	@Transactional
 	public void sendCode(User user) {
+		if (email.isDisabled()) {
+			return;
+		}
 		Instant now = Instant.now();
 		tokens.markAllUsed(user, now);
 

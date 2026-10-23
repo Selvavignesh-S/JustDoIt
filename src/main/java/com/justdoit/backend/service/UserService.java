@@ -55,6 +55,9 @@ public class UserService {
 		if (user.getEmail() == null || user.isEmailVerified()) {
 			throw ApiException.validation("email", "There is no unconfirmed email to confirm.");
 		}
+		if (!verification.emailEnabled()) {
+			throw ApiException.emailDisabled();
+		}
 		limitVerificationEmails(user);
 		verification.sendCode(user);
 	}

@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 // SRS 25: "only the description is included, static instruction unchanged between calls, reasoning disabled, output cap set"
@@ -24,8 +25,10 @@ class AiRequestBudgetTests {
 
 		assertThat(config).containsEntry("maxOutputTokens", 80).containsEntry("temperature", 0)
 				.containsEntry("thinkingConfig", Map.of("thinkingLevel", "minimal"));
-		assertThat(json.writeValueAsString(body.get("contents"))).isEqualTo(
-				"[{\"role\":\"user\",\"parts\":[{\"text\":\"" + DESCRIPTION + "\"}]}]");
+		// Compared as JSON trees: Map.of has no fixed key order, so comparing JSON text would be flaky
+		JsonNode contents = json.valueToTree(body.get("contents"));
+		assertThat(contents).isEqualTo(json.readTree(
+				"[{\"role\":\"user\",\"parts\":[{\"text\":\"" + DESCRIPTION + "\"}]}]"));
 		assertThat(gemini.requestBody("something else").get("systemInstruction")).isEqualTo(body.get("systemInstruction"));
 
 		// Gemini 2.x uses a budget of 0 instead; never both

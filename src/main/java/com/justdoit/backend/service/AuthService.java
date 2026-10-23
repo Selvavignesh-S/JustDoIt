@@ -108,6 +108,9 @@ public class AuthService {
 	// SRS 7.5 steps 2-3. Callers always return the same response, whether or not anything was sent.
 	@Transactional
 	public void requestPasswordReset(String rawEmail, String clientIp) {
+		if (email.isDisabled()) {
+			throw ApiException.emailDisabled();
+		}
 		String resetEmail = normalize(rawEmail);
 		if (!rateLimiter.tryAcquire("reset:email:" + resetEmail, RESETS_PER_EMAIL, RESET_WINDOW)
 				|| !rateLimiter.tryAcquire("reset:ip:" + clientIp, RESETS_PER_IP, RESET_WINDOW)) {
