@@ -1,4 +1,4 @@
-import { parseHours, signUpSchema, taskFormSchema, utf8Bytes } from '../validators';
+import { parseHours, signUpSchema, taskFormSchema, taskFormSchemaFor, utf8Bytes } from '../validators';
 
 const valid = { fullName: 'Selva', username: 'selva_v', password: 'Password123', email: '' };
 
@@ -56,5 +56,16 @@ describe('task form rules mirror the server', () => {
     expect(errorsOf({ category: 'STUDY' }).category).toBe('Choose a category.');
     expect(errorsOf({ deadline: null }).deadline).toBe('Pick a deadline.');
     expect(errorsOf({ deadline: new Date(Date.now() - 60_000) }).deadline).toBe('Pick a time in the future.');
+  });
+});
+
+describe('editing an overdue task', () => {
+  const past = new Date(Date.now() - 3_600_000);
+  const form = { title: 'Late essay', category: 'ASSIGNMENT', hours: '3', deadline: past, description: '' };
+
+  it('keeps an unchanged past deadline valid, but not a different past one', () => {
+    expect(taskFormSchemaFor(past.getTime()).safeParse(form).success).toBe(true);
+    expect(taskFormSchemaFor(past.getTime()).safeParse({ ...form, deadline: new Date(past.getTime() - 60_000) }).success).toBe(false);
+    expect(taskFormSchema.safeParse(form).success).toBe(false); // creating: always in the future
   });
 });

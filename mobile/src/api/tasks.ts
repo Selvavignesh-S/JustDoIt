@@ -1,6 +1,6 @@
 // Task, summary, reminder and AI routes (Route plan sections 3 and 4)
 import { request } from './client';
-import { Category, NewTask, Page, Priority, Reminder, Suggestion, Summary, Task, TaskScope, TaskSort, TaskStatus } from './types';
+import { Category, NewTask, Page, Priority, Reminder, Suggestion, Summary, Task, TaskChanges, TaskScope, TaskSort, TaskStatus } from './types';
 
 export type TaskFilters = {
   status: TaskStatus;
@@ -20,6 +20,10 @@ export function listTasks(filters: TaskFilters, page: number): Promise<Page<Task
 }
 
 export const getSummary = () => request<Summary>('/tasks/summary');
+// One task with its files; a missing task and someone else's task both come back as NOT_AVAILABLE
+export const getTask = (id: number) => request<Task>(`/tasks/${id}`);
+export const updateTask = (id: number, changes: TaskChanges, version: number) =>
+  request<Task>(`/tasks/${id}`, { method: 'PATCH', body: { ...changes, version } });
 export const getReminders = () => request<Reminder[]>('/reminders');
 
 // Every change sends the row version the app last saw; a stale one comes back as CONFLICT (409)

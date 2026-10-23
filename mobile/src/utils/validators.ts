@@ -42,17 +42,23 @@ export function parseHours(text: string): number | null {
   return n >= 0.1 && n <= 999.9 ? n : null;
 }
 
-export const taskFormSchema = z.object({
-  title: z.string().trim().min(1, 'Enter a task name.').max(200, 'Use at most 200 characters.'),
-  category: z.string().refine((c) => (CATEGORIES as readonly string[]).includes(c), 'Choose a category.'),
-  hours: z.string().refine((h) => parseHours(h) !== null, 'Use 0.1 to 999.9 hours, at most one decimal.'),
-  deadline: z
-    .date()
-    .nullable()
-    .refine((d) => d !== null, 'Pick a deadline.')
-    .refine((d) => d === null || d.getTime() > Date.now(), 'Pick a time in the future.'),
-  description: z.string().max(2000, 'Use at most 2000 characters.'),
-});
+// originalDeadline: when editing, an unchanged deadline may already be in the past (an overdue task can still be
+// renamed). Only a NEW deadline must be in the future, which is also all the server checks (it never re-sends it).
+export function taskFormSchemaFor(originalDeadline?: number) {
+  return z.object({
+    title: z.string().trim().min(1, 'Enter a task name.').max(200, 'Use at most 200 characters.'),
+    category: z.string().refine((c) => (CATEGORIES as readonly string[]).includes(c), 'Choose a category.'),
+    hours: z.string().refine((h) => parseHours(h) !== null, 'Use 0.1 to 999.9 hours, at most one decimal.'),
+    deadline: z
+      .date()
+      .nullable()
+      .refine((d) => d !== null, 'Pick a deadline.')
+      .refine((d) => d === null || d.getTime() === originalDeadline || d.getTime() > Date.now(), 'Pick a time in the future.'),
+    description: z.string().max(2000, 'Use at most 2000 characters.'),
+  });
+}
+
+export const taskFormSchema = taskFormSchemaFor();
 
 // What the form holds (deadline may still be empty) vs what a valid form produces
 export type TaskFormInput = z.input<typeof taskFormSchema>;

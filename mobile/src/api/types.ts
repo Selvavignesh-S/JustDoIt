@@ -29,6 +29,16 @@ export type TaskStatus = 'PENDING' | 'COMPLETED';
 export type TaskScope = 'DUE_SOON' | 'OVERDUE';
 export type TaskSort = 'PRIORITY' | 'DEADLINE';
 
+// One file on a task (Route plan 5.1): enough to download or remove it without opening the version list
+export type AttachmentSummary = {
+  id: number;
+  displayName: string;
+  currentVersionId: number | null;
+  currentVersionNumber: number | null;
+  updatedAt: string;
+  version: number; // the attachment's row version
+};
+
 export type Task = {
   id: number;
   title: string;
@@ -44,7 +54,11 @@ export type Task = {
   version: number; // row version, sent back with every change (optimistic locking)
   createdAt: string;
   updatedAt: string;
+  attachments?: AttachmentSummary[]; // only on GET /tasks/{id}
 };
+
+// PATCH body: only the fields that changed (Route plan 3.6). description "" clears it.
+export type TaskChanges = Partial<{ title: string; category: Category; estimatedHours: number; deadline: string; description: string }>;
 
 export type Page<T> = { items: T[]; page: number; hasNext: boolean };
 

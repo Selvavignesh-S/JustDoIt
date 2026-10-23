@@ -130,8 +130,7 @@ export default function TasksScreen() {
             {firstReminder.title}: {firstReminder.reason}
           </AppText>
           <View style={styles.bannerActions}>
-            {/* shortcut: "View" opens the reminders list until the task detail screen exists (Phase 3) */}
-            <Button variant="link" label={strings.tasks.view} onPress={() => setOpenSheet('reminders')} />
+            <Button variant="link" label={strings.tasks.view} onPress={() => router.push(`/task/${firstReminder.taskId}`)} />
             {/* Closing only hides it until the next sync; nothing is sent to the server (SRS 13) */}
             <Button variant="link" label={strings.tasks.close} onPress={() => setBannerHiddenAt(reminders.dataUpdatedAt)} />
           </View>
@@ -191,6 +190,7 @@ export default function TasksScreen() {
             completing={complete.isPending && complete.variables?.id === item.id}
             onComplete={() => complete.mutate(item)}
             onMenu={() => setMenuTask(item)}
+            onPress={() => router.push(`/task/${item.id}`)}
           />
         )}
         onEndReached={() => list.hasNextPage && !list.isFetchingNextPage && !list.isFetchNextPageError && list.fetchNextPage()}
@@ -237,10 +237,18 @@ export default function TasksScreen() {
         <ScrollView>
           {reminders.data?.length ? (
             reminders.data.map((r) => (
-              <View key={r.taskId} style={styles.reminderRow}>
+              // Tap opens the task (UI plan 7.13)
+              <Pressable
+                key={r.taskId}
+                accessibilityRole="button"
+                onPress={() => {
+                  setOpenSheet(null);
+                  router.push(`/task/${r.taskId}`);
+                }}
+                style={styles.reminderRow}>
                 <AppText variant="bodyStrong">{r.title}</AppText>
                 <AppText variant="caption">{r.reason}</AppText>
-              </View>
+              </Pressable>
             ))
           ) : (
             <AppText variant="caption">{strings.tasks.noReminders}</AppText>

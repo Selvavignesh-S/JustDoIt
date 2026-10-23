@@ -1,4 +1,4 @@
-import { endOfDay, formatDateTime, formatHours, normalizeDescription, relativeFromNow } from '../format';
+import { endOfDay, formatDateTime, formatHours, formatShortDate, normalizeDescription, relativeFromNow } from '../format';
 
 describe('formatting', () => {
   it('formats a deadline like "Wed 23 Sep, 10:00 AM" in local time', () => {
@@ -14,6 +14,10 @@ describe('formatting', () => {
     expect(relativeFromNow(new Date(2026, 9, 25, 9, 59), now)).toBe('in 23 hours');
     expect(relativeFromNow(new Date(2026, 9, 24, 11, 0), now)).toBe('in 1 hour');
     expect(relativeFromNow(new Date(2026, 9, 24, 10, 20), now)).toBe('in 20 minutes');
+  });
+
+  it('short dates read like "17 Sep"', () => {
+    expect(formatShortDate(new Date(2026, 8, 17, 9, 0))).toBe('17 Sep');
   });
 
   it('drops a trailing .0 from hours', () => {

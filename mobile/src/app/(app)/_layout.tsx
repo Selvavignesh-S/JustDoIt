@@ -18,6 +18,7 @@ export default function AppLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false, title: strings.tabs.tasks }} />
       <Stack.Screen name="new-task" options={{ title: strings.create.title }} />
       <Stack.Screen name="task-form" options={{ title: strings.create.reviewTitle }} />
+      <Stack.Screen name="task/[id]" options={{ title: '' }} />
     </Stack>
   );
 }

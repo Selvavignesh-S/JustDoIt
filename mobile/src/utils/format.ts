@@ -44,3 +44,9 @@ export function endOfDay(date: Date): Date {
   d.setHours(23, 59, 0, 0);
   return d;
 }
+
+// "17 Sep": created / updated dates on the detail screen
+export function formatShortDate(value: string | Date): string {
+  const d = typeof value === 'string' ? new Date(value) : value;
+  return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
