@@ -1,6 +1,7 @@
 package com.justdoit.backend.config;
 
 import java.util.HexFormat;
+import java.util.List;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -24,6 +25,9 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.justdoit.backend.exception.ApiError;
@@ -44,6 +48,7 @@ public class SecurityConfig {
 		http
 				// Stateless JWT API (SRS 7.2): no session, so no CSRF token to protect
 				.csrf(csrf -> csrf.disable())
+				.cors(Customizer.withDefaults())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						// Render health checks and cron-job.org keep-alive pings call this unauthenticated
@@ -57,6 +62,20 @@ public class SecurityConfig {
 						.authenticationEntryPoint(unauthorized))
 				.exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorized));
 		return http.build();
+	}
+
+	// Browsers only: lets the Expo web preview on localhost call a local backend during development.
+	// The phone app doesn't use CORS. Empty by default, so production accepts no browser origin.
+	@Bean
+	CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origins:}") List<String> origins) {
+		CorsConfiguration config = new CorsConfiguration();
+		config.setAllowedOrigins(origins);
+		config.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE"));
+		config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+		config.setExposedHeaders(List.of("Content-Disposition"));
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", config);
+		return source;
 	}
 
 	@Bean

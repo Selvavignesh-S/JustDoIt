@@ -8,3 +8,4 @@ docker-compose*
 storage/
 .idea
 .vscode
+mobile/

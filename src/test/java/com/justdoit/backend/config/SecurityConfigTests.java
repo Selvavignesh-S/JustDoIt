@@ -33,6 +33,13 @@ class SecurityConfigTests {
 	}
 
 	@Test
+	void browserOriginsAreRefusedByDefault() throws Exception {
+		mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options("/auth/login")
+				.header("Origin", "http://localhost:8081").header("Access-Control-Request-Method", "POST"))
+				.andExpect(status().isForbidden());
+	}
+
+	@Test
 	void forgedTokenIsRejected() throws Exception {
 		// Signed with a different key, so the signature check must fail
 		String forged = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwiZXhwIjo0MTAyNDQ0ODAwfQ.c2lnbmF0dXJlLXdpdGgtdGhlLXdyb25nLWtleQ";
