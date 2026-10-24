@@ -1,4 +1,4 @@
-import { parseHours, signUpSchema, taskFormSchema, taskFormSchemaFor, utf8Bytes } from '../validators';
+import { checkPickedFile, parseHours, signUpSchema, taskFormSchema, taskFormSchemaFor, utf8Bytes } from '../validators';
 
 const valid = { fullName: 'Selva', username: 'selva_v', password: 'Password123', email: '' };
 
@@ -67,5 +67,16 @@ describe('editing an overdue task', () => {
     expect(taskFormSchemaFor(past.getTime()).safeParse(form).success).toBe(true);
     expect(taskFormSchemaFor(past.getTime()).safeParse({ ...form, deadline: new Date(past.getTime() - 60_000) }).success).toBe(false);
     expect(taskFormSchema.safeParse(form).success).toBe(false); // creating: always in the future
+  });
+});
+
+describe('picked files', () => {
+  it('accepts the allowed types up to 50 MB', () => {
+    expect(checkPickedFile('ER diagram.PDF', 1024)).toBeNull();
+    expect(checkPickedFile('notes.jpeg', undefined)).toBeNull();
+    expect(checkPickedFile('big.zip', 50 * 1024 * 1024)).toBeNull();
+    expect(checkPickedFile('big.zip', 50 * 1024 * 1024 + 1)).toBe('FILE_TOO_LARGE');
+    expect(checkPickedFile('script.exe', 10)).toBe('FILE_TYPE');
+    expect(checkPickedFile('README', 10)).toBe('FILE_TYPE');
   });
 });

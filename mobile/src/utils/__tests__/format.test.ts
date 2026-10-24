@@ -1,4 +1,4 @@
-import { endOfDay, formatDateTime, formatHours, formatShortDate, normalizeDescription, relativeFromNow } from '../format';
+import { endOfDay, formatBytes, formatDateTime, formatHours, formatShortDate, joinVersions, normalizeDescription, relativeFromNow } from '../format';
 
 describe('formatting', () => {
   it('formats a deadline like "Wed 23 Sep, 10:00 AM" in local time', () => {
@@ -31,5 +31,19 @@ describe('formatting', () => {
     expect(normalizeDescription('  finish   lab\n report ')).toBe('finish lab report');
     const d = endOfDay(new Date(2026, 9, 24, 8, 15));
     expect([d.getHours(), d.getMinutes()]).toEqual([23, 59]);
+  });
+});
+
+describe('file formatting', () => {
+  it('shows a picked file size in KB or MB', () => {
+    expect(formatBytes(200)).toBe('1 KB');
+    expect(formatBytes(820 * 1024)).toBe('820 KB');
+    expect(formatBytes(2.4 * 1024 * 1024)).toBe('2.4 MB');
+  });
+
+  it('lists the versions that stay saved', () => {
+    expect(joinVersions([2])).toBe('v2');
+    expect(joinVersions([2, 3])).toBe('v2 and v3');
+    expect(joinVersions([2, 3, 4])).toBe('v2, v3 and v4');
   });
 });

@@ -5,7 +5,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { isApiError } from '@/api/errors';
 import { completeTask, deleteTask, getTask, reopenTask, rescheduleTask } from '@/api/tasks';
-import { AttachmentSummary, Task } from '@/api/types';
+import { Task } from '@/api/types';
 import { AppText } from '@/components/AppText';
 import { Banner } from '@/components/Banner';
 import { Button } from '@/components/Button';
@@ -13,10 +13,11 @@ import { Chip, OverdueChip, PriorityChip } from '@/components/Chips';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { RescheduleSheet } from '@/components/RescheduleSheet';
 import { Screen } from '@/components/Screen';
+import { TaskFiles } from '@/components/TaskFiles';
 import { useSnackbar } from '@/components/Snackbar';
 import { strings } from '@/strings/en';
 import { refreshTaskData } from '@/tasks/cache';
-import { colors, fonts, radius, space } from '@/theme/tokens';
+import { colors, radius, space } from '@/theme/tokens';
 import { formatDateTime, formatHours, formatShortDate } from '@/utils/format';
 
 // S7 Task detail (UI plan 7.9). Completed tasks are read-only: no Edit, no Reschedule (SRS 9.5).
@@ -101,7 +102,6 @@ export default function TaskDetailScreen() {
   }
 
   const pending = task.status === 'PENDING';
-  const files = task.attachments ?? [];
 
   return (
     <Screen edges={['bottom']}>
@@ -150,11 +150,7 @@ export default function TaskDetailScreen() {
         </View>
       ) : null}
 
-      <View style={styles.block}>
-        {/* shortcut: files are listed read-only; adding, versions and download arrive in Phase 4 */}
-        <AppText variant="section">{strings.detail.files(files.length)}</AppText>
-        {files.length ? files.map((f) => <FileRow key={f.id} file={f} />) : <AppText variant="caption">{strings.detail.noFiles}</AppText>}
-      </View>
+      <TaskFiles taskId={task.id} files={task.attachments ?? []} />
 
       <View style={styles.actions}>
         {pending ? (
@@ -209,22 +205,6 @@ function Row({ label, children, last }: { label: string; children: React.ReactNo
   );
 }
 
-// One file: type badge, name, "v3 · updated 18 Sep". No file size: the API doesn't return one (UI decision D12).
-function FileRow({ file }: { file: AttachmentSummary }) {
-  const ext = file.displayName.includes('.') ? file.displayName.split('.').pop()!.toUpperCase().slice(0, 4) : 'FILE';
-  return (
-    <View style={styles.file}>
-      <View style={styles.badge}>
-        <AppText style={styles.badgeText}>{ext}</AppText>
-      </View>
-      <View style={styles.fileBody}>
-        <AppText numberOfLines={1}>{file.displayName}</AppText>
-        <AppText variant="caption">{strings.detail.fileLine(file.currentVersionNumber, formatShortDate(file.updatedAt))}</AppText>
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   loading: { marginTop: space.xxl },
   block: { gap: space.s },
@@ -236,18 +216,5 @@ const styles = StyleSheet.create({
   rowLabel: { marginBottom: 2 },
   rowValue: { alignItems: 'flex-start' },
   inlineLink: { alignSelf: 'flex-start', paddingHorizontal: 0 },
-  file: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.m,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.line,
-    borderRadius: radius.card,
-    padding: space.m,
-  },
-  badge: { backgroundColor: colors.brandTint, borderRadius: radius.input, paddingHorizontal: space.s, paddingVertical: space.xs, minWidth: 44, alignItems: 'center' },
-  badgeText: { color: colors.infoInk, fontFamily: fonts.bodyBold, fontSize: 12 },
-  fileBody: { flex: 1, gap: 2 },
   actions: { gap: space.s, marginTop: space.s },
 });

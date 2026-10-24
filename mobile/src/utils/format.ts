@@ -50,3 +50,15 @@ export function formatShortDate(value: string | Date): string {
   const d = typeof value === 'string' ? new Date(value) : value;
   return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
+
+// The picked file's local size, e.g. "820 KB" or "2.4 MB" (stored files have no size: UI decision D12)
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// [2, 3, 4] → "v2, v3 and v4"
+export function joinVersions(numbers: number[]): string {
+  const names = numbers.map((n) => `v${n}`);
+  return names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}

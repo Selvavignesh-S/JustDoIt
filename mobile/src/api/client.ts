@@ -104,6 +104,32 @@ async function attempt<T>(path: string, method: Method, { body, auth = true, sig
   }
 }
 
+// The header for requests made outside request(): uploads below and file downloads
+export const authHeaders = (): Record<string, string> => (authToken ? { Authorization: `Bearer ${authToken}` } : {});
+
+// Multipart upload through XMLHttpRequest, because fetch reports no upload progress (UI plan 7.11).
+// No timeout (the user has Cancel) and never retried: the user taps Retry.
+export function upload<T>(path: string, form: FormData, onProgress: (fraction: number) => void, signal: AbortSignal): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', API_URL + path);
+    xhr.setRequestHeader('Accept', 'application/json');
+    Object.entries(authHeaders()).forEach(([k, v]) => xhr.setRequestHeader(k, v));
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
+    xhr.onload = () => {
+      const data = parseJson(xhr.responseText);
+      if (xhr.status >= 200 && xhr.status < 300) return resolve(data as T);
+      const err = toApiError(xhr.status, data, message);
+      if (err.kind === 'UNAUTHORIZED') onUnauthorized();
+      reject(err);
+    };
+    xhr.onerror = () => reject(new ApiError('NETWORK', message('NETWORK')));
+    xhr.onabort = () => reject(new ApiError('CANCELLED', 'Cancelled'));
+    signal.addEventListener('abort', () => xhr.abort());
+    xhr.send(form);
+  });
+}
+
 function parseJson(text: string): unknown {
   if (!text) return undefined;
   try {

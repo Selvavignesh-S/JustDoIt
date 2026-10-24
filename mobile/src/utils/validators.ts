@@ -63,3 +63,13 @@ export const taskFormSchema = taskFormSchemaFor();
 // What the form holds (deadline may still be empty) vs what a valid form produces
 export type TaskFormInput = z.input<typeof taskFormSchema>;
 export type TaskFormOutput = z.output<typeof taskFormSchema>;
+
+// Quick checks on a picked file before uploading; the server's answer is still final (UI plan 7.11)
+const FILE_TYPES = ['pdf', 'docx', 'pptx', 'xlsx', 'txt', 'png', 'jpg', 'jpeg', 'zip'];
+export const MAX_FILE_BYTES = 50 * 1024 * 1024;
+export function checkPickedFile(name: string, size: number | undefined): 'FILE_TYPE' | 'FILE_TOO_LARGE' | null {
+  const ext = name.includes('.') ? name.split('.').pop()!.toLowerCase() : '';
+  if (!FILE_TYPES.includes(ext)) return 'FILE_TYPE';
+  if (size !== undefined && size > MAX_FILE_BYTES) return 'FILE_TOO_LARGE';
+  return null;
+}

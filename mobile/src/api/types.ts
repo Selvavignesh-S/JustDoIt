@@ -39,6 +39,19 @@ export type AttachmentSummary = {
   version: number; // the attachment's row version
 };
 
+// One stored version of a file (Route plan 6.1). No size: the API doesn't return one (UI decision D12).
+export type AttachmentVersion = {
+  id: number;
+  versionNumber: number;
+  uploadedAt: string;
+  originalFileName: string;
+  changeDescription: string | null;
+  current: boolean;
+};
+
+// Newest first; attachmentVersion is the row version to send with restore, delete and upload
+export type VersionList = { attachmentVersion: number; versions: AttachmentVersion[] };
+
 export type Task = {
   id: number;
   title: string;
