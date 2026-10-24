@@ -41,7 +41,7 @@ public class AuthController {
 	@PostMapping("/register")
 	@ResponseStatus(HttpStatus.CREATED)
 	MeResponse register(@Valid @RequestBody RegisterRequest req) {
-		return MeResponse.from(auth.register(req));
+		return MeResponse.from(auth.register(req), verification.emailEnabled());
 	}
 
 	@PostMapping("/login")

@@ -28,6 +28,22 @@ public final class ReminderPolicy {
 		};
 	}
 
+	// Push stages (2026-10-25): a task is pushed each time it climbs to a more urgent stage.
+	// 0 none, 1 Medium due soon, 2 High, 3 Due tomorrow, 4 Overdue.
+	public static int stage(Task task, Instant now) {
+		if (!qualifies(task, now)) {
+			return 0;
+		}
+		if (PriorityEngine.isOverdue(task, now)) {
+			return 4;
+		}
+		return switch (task.getCurrentPriority()) {
+			case DUE_TOMORROW -> 3;
+			case HIGH -> 2;
+			case MEDIUM, LOW -> 1;
+		};
+	}
+
 	// Overdue first, then by urgency, then soonest deadline; id keeps ties stable
 	public static Comparator<Task> order(Instant now) {
 		return Comparator.<Task>comparingInt(t -> rank(t, now))

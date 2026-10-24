@@ -6,6 +6,7 @@ export type Me = {
   username: string;
   email: string | null;
   emailVerified: boolean;
+  emailEnabled: boolean; // false while the server sends no emails (no confirmation links, no resets)
 };
 
 export type RegisterInput = {

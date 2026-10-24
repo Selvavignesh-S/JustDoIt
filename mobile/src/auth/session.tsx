@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { setAuthToken, setUnauthorizedHandler } from '@/api/client';
+import { stopReminders } from '@/notifications/reminders';
 import { clearAnalysis } from '@/tasks/analyzeMemory';
 
 import { deleteToken, readToken, saveToken } from './tokenStore';
@@ -27,6 +28,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(
     async (reason: SignOutReason = 'manual') => {
+      // Only a deliberate log out unregisters the phone; an expired session keeps getting reminders
+      if (reason === 'manual') stopReminders();
       setAuthToken(null);
       await deleteToken();
       // Log out clears everything held in memory too (UI plan 8.3)

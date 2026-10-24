@@ -46,6 +46,17 @@ class ReminderPolicyTests {
 	}
 
 	@Test
+	void pushStagesClimbWithUrgency() {
+		assertThat(ReminderPolicy.stage(pending(Priority.LOW, Duration.ofDays(2)), NOW)).isZero();
+		assertThat(ReminderPolicy.stage(pending(Priority.MEDIUM, Duration.ofDays(5)), NOW)).as("medium, not due soon").isZero();
+		assertThat(ReminderPolicy.stage(pending(Priority.MEDIUM, Duration.ofHours(50)), NOW)).isEqualTo(1);
+		assertThat(ReminderPolicy.stage(pending(Priority.HIGH, Duration.ofDays(6)), NOW)).isEqualTo(2);
+		assertThat(ReminderPolicy.stage(pending(Priority.DUE_TOMORROW, Duration.ofHours(10)), NOW)).isEqualTo(3);
+		assertThat(ReminderPolicy.stage(pending(Priority.LOW, Duration.ofHours(-1)), NOW)).as("overdue beats priority").isEqualTo(4);
+		assertThat(ReminderPolicy.stage(task("t", Priority.HIGH, Duration.ofHours(5), "1", TaskStatus.COMPLETED), NOW)).isZero();
+	}
+
+	@Test
 	void reasonsUseRelativeTime() {
 		assertThat(ReminderPolicy.reason(pending(Priority.DUE_TOMORROW, Duration.ofHours(-3)), NOW)).isEqualTo("Overdue by 3 hours");
 		assertThat(ReminderPolicy.reason(pending(Priority.DUE_TOMORROW, Duration.ofDays(-2)), NOW)).isEqualTo("Overdue by 2 days");

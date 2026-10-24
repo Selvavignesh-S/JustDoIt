@@ -4,7 +4,7 @@ import { strings } from '@/strings/en';
 
 import { ApiError, ErrorKind, toApiError } from './errors';
 
-type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export type RequestOptions = {
   method?: Method;

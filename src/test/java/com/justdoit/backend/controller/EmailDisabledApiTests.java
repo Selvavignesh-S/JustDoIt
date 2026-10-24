@@ -42,7 +42,8 @@ class EmailDisabledApiTests {
 		send("/auth/register", "{\"fullName\":\"No Mail\",\"username\":\"no_mail\",\"password\":\"Password123\",\"email\":\"NoMail@Example.com\"}")
 				.andExpect(status().isCreated())
 				.andExpect(jsonPath("$.email").value("nomail@example.com"))
-				.andExpect(jsonPath("$.emailVerified").value(false));
+				.andExpect(jsonPath("$.emailVerified").value(false))
+				.andExpect(jsonPath("$.emailEnabled").value(false));
 		assertThat(verificationTokens.count()).as("no confirmation code created").isEqualTo(codesBefore);
 
 		// Same answer for a known and an unknown address, so it reveals nothing about accounts

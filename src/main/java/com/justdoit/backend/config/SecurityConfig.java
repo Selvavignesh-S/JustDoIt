@@ -55,6 +55,8 @@ public class SecurityConfig {
 						.requestMatchers(EndpointRequest.to(HealthEndpoint.class)).permitAll()
 						// Register, login, verify email and password reset happen before the user has a token
 						.requestMatchers("/auth/**").permitAll()
+						// The privacy policy the app links to (UI decision D17)
+						.requestMatchers("/privacy.html").permitAll()
 						.anyRequest().authenticated())
 				// Reads "Authorization: Bearer <jwt>", checks signature and expiry, and sets the current user
 				.oauth2ResourceServer(oauth -> oauth

@@ -22,6 +22,7 @@ class SecurityConfigTests {
 	@Test
 	void healthIsPublic() throws Exception {
 		mockMvc.perform(get("/actuator/health")).andExpect(status().isOk());
+		mockMvc.perform(get("/privacy.html")).andExpect(status().isOk());
 		mockMvc.perform(get("/actuator/health/liveness")).andExpect(status().isOk());
 	}
 

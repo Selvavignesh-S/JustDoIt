@@ -60,6 +60,7 @@ class AuthApiTests {
 				.andExpect(jsonPath("$.username").value("selva_v"))
 				.andExpect(jsonPath("$.email").value("selva@example.com"))
 				.andExpect(jsonPath("$.emailVerified").value(false))
+				.andExpect(jsonPath("$.emailEnabled").value(true))
 				.andExpect(jsonPath("$.token").doesNotExist());
 
 		String token = login("SELVA_v", "Password123");

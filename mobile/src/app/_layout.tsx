@@ -89,6 +89,8 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="sign-up" options={{ headerShown: true, title: strings.signUp.title }} />
         <Stack.Screen name="forgot-password" options={{ headerShown: true, title: strings.forgot.title }} />
       </Stack.Protected>
+      {/* The emailed confirmation link works signed in or out (UI plan 5.2) */}
+      <Stack.Screen name="confirm-email" />
     </Stack>
   );
 }
