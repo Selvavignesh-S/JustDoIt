@@ -152,7 +152,7 @@ public class AuthService {
 		user.setPasswordHash(passwordEncoder.encode(newPassword));
 	}
 
-	private static boolean tooLongForBcrypt(String password) {
+	static boolean tooLongForBcrypt(String password) {
 		return password.getBytes(StandardCharsets.UTF_8).length > BCRYPT_MAX_BYTES;
 	}
 

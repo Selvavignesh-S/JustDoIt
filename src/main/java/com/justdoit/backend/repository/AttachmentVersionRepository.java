@@ -30,4 +30,7 @@ public interface AttachmentVersionRepository extends JpaRepository<AttachmentVer
 	@Query("select v.storedFileName from AttachmentVersion v where v.attachment.task.id = :taskId")
 	List<String> storedFileNamesForTask(Long taskId);
 
+	@Query("select v.storedFileName from AttachmentVersion v where v.attachment.task.user.id = :userId")
+	List<String> storedFileNamesForUser(Long userId);
+
 }

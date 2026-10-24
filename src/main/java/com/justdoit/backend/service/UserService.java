@@ -1,13 +1,17 @@
 package com.justdoit.backend.service;
 
 import java.time.Duration;
+import java.util.List;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.justdoit.backend.entity.User;
 import com.justdoit.backend.exception.ApiException;
+import com.justdoit.backend.repository.AttachmentVersionRepository;
 import com.justdoit.backend.repository.UserRepository;
+import com.justdoit.backend.storage.StorageCleanup;
 import com.justdoit.backend.util.RateLimiter;
 
 // The signed-in user's own account (Route plan 2.7-2.9). The id always comes from the JWT, never from the URL.
@@ -20,11 +24,18 @@ public class UserService {
 	private final UserRepository users;
 	private final EmailVerificationService verification;
 	private final RateLimiter rateLimiter;
+	private final PasswordEncoder passwordEncoder;
+	private final AttachmentVersionRepository versions;
+	private final StorageCleanup storageCleanup;
 
-	public UserService(UserRepository users, EmailVerificationService verification, RateLimiter rateLimiter) {
+	public UserService(UserRepository users, EmailVerificationService verification, RateLimiter rateLimiter,
+			PasswordEncoder passwordEncoder, AttachmentVersionRepository versions, StorageCleanup storageCleanup) {
 		this.users = users;
 		this.verification = verification;
 		this.rateLimiter = rateLimiter;
+		this.passwordEncoder = passwordEncoder;
+		this.versions = versions;
+		this.storageCleanup = storageCleanup;
 	}
 
 	public User get(long userId) {
@@ -50,6 +61,10 @@ public class UserService {
 	}
 
 	@Transactional
+	public boolean emailEnabled() {
+		return verification.emailEnabled();
+	}
+
 	public void resendVerification(long userId) {
 		User user = get(userId);
 		if (user.getEmail() == null || user.isEmailVerified()) {
@@ -60,6 +75,20 @@ public class UserService {
 		}
 		limitVerificationEmails(user);
 		verification.sendCode(user);
+	}
+
+	// Google Play's account deletion. The DB cascade (V1-V3) removes tasks, attachments, versions, reset and
+	// verification codes, push tokens and reminder records; stored files go once the delete has committed.
+	@Transactional
+	public void deleteAccount(long userId, String password) {
+		User user = get(userId);
+		if (AuthService.tooLongForBcrypt(password) || !passwordEncoder.matches(password, user.getPasswordHash())) {
+			throw ApiException.badCredentials();
+		}
+		List<String> storedFiles = versions.storedFileNamesForUser(userId);
+		users.delete(user);
+		users.flush();
+		storageCleanup.deleteAfterCommit(storedFiles);
 	}
 
 	private void limitVerificationEmails(User user) {
