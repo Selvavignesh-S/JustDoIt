@@ -1,10 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
-import * as Notifications from 'expo-notifications';
 import { router, Stack } from 'expo-router';
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
 
-import { enableReminders } from '@/notifications/reminders';
+import { enableReminders, listenForReminders } from '@/notifications/reminders';
 import { strings } from '@/strings/en';
 import { refreshTaskData } from '@/tasks/cache';
 import { colors, fonts } from '@/theme/tokens';
@@ -18,25 +16,15 @@ export default function AppLayout() {
     void enableReminders(true);
   }, []);
 
-  // The web preview has no notifications. On a phone: a reminder that arrives while the app is open refreshes
-  // the banner and counts; tapping one opens its task (a summary of several just opens the app). A tap that
-  // started the app while signed out is handled here after sign-in, since this layout mounts only then.
-  useEffect(() => {
-    if (Platform.OS === 'web') return;
-    const open = (tapped: Notifications.NotificationResponse | null) => {
-      if (!tapped) return;
-      Notifications.clearLastNotificationResponse();
-      const taskId = tapped.notification.request.content.data?.taskId;
-      if (typeof taskId === 'number') router.push(`/task/${taskId}`);
-    };
-    open(Notifications.getLastNotificationResponse());
-    const taps = Notifications.addNotificationResponseReceivedListener(open);
-    const arrivals = Notifications.addNotificationReceivedListener(() => void refreshTaskData(queryClient));
-    return () => {
-      taps.remove();
-      arrivals.remove();
-    };
-  }, [queryClient]);
+  // A reminder that arrives while the app is open refreshes the banner and counts; tapping one opens its task
+  useEffect(
+    () =>
+      listenForReminders(
+        (taskId) => router.push(`/task/${taskId}`),
+        () => void refreshTaskData(queryClient),
+      ),
+    [queryClient],
+  );
 
   return (
     <Stack

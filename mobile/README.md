@@ -38,7 +38,9 @@ One-time setup, done by you (it needs your own accounts):
    (adds the project id to `app.json`; commit that change).
 2. Firebase (delivers Android pushes): at console.firebase.google.com create a project, add an
    **Android app** with package name `com.justdoit.app`, download `google-services.json` into `mobile/` and
-   commit it (it holds only public identifiers; EAS builds only see committed files).
+   commit it (it holds only public identifiers; EAS builds only see committed files). Then add
+   `"googleServicesFile": "./google-services.json"` inside `"android"` in `app.json` (leave it out until the
+   file exists: Expo refuses a config that points at a missing file).
 3. Firebase → Project settings → Service accounts → **Generate new private key**. Upload it to EAS with
    `npx eas-cli@latest credentials` → Android → production → Google Service Account →
    "Manage your Google Service Account Key for Push Notifications (FCM V1)" → "Set up a Google Service
